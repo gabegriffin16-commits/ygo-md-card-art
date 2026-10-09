@@ -1,0 +1,39 @@
+# Converts any new Master Duel cards to compressed art and commits them.
+# Runs weekly (after the companion's card database refresh) and can be started by hand from the Actions tab.
+name: Build card art
+
+on:
+  schedule:
+    - cron: "30 7 * * 1"      # Mondays, after the card database update
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths: ["build_art.py", ".github/workflows/build-art.yml"]
+
+permissions:
+  contents: write
+
+concurrency:
+  group: build-art
+  cancel-in-progress: false
+
+jobs:
+  art:
+    runs-on: ubuntu-latest
+    timeout-minutes: 300
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: pip install "pillow>=11.3"
+      - name: Convert new cards
+        run: python build_art.py
+      - name: Commit
+        run: |
+          git config user.name "card-art-bot"
+          git config user.email "card-art-bot@users.noreply.github.com"
+          git add art
+          if git diff --cached --quiet; then echo "No new cards."; exit 0; fi
+          git commit -q -m "Card art: $(git diff --cached --name-only | wc -l) new cards"
+          git push
