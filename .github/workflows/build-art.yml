@@ -4,7 +4,7 @@ name: Build card art
 
 on:
   schedule:
-    - cron: "30 7 * * 1"      # Mondays, after the card database update
+    - cron: "45 10 * * 1"     # Mondays, an hour after the companion's card database update
   workflow_dispatch:
   push:
     branches: [main]
